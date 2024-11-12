@@ -4,35 +4,36 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:get/get.dart';
 
+// This thing should be refactored to accept the whole data :')
+
 class PersonApplicationTile extends StatelessWidget {
   final String header;
   final String title;
   final String label;
-  final String status;
-  final String pictureURL;
-  final int opportunityID;
-  final String opportunityProgram;
-
   final double pictureRadius;
-
+  final Map applicationData;
   final bool expandable;
   final bool showExtraActionsDots;
   final List<PopupMenuEntry<int>> Function(BuildContext)? popupItemsBuilder;
 
   final List<Widget> expandableChild;
 
-  final Function(LongPressStartDetails, int, String)? onLongPress;
+  final Function(LongPressStartDetails, Map)? onLongPress;
+
+  late final String status;
 
   late final Color _statusColor;
-  late final Future<FileResponse> _pictureFuture;
-  late final bool _isPictureSVG;
 
+  late final Future<FileResponse> _pictureFuture;
+
+  late final bool _isPictureSVG;
   late final bool _showHeader;
   late final bool _showTitle;
   late final bool _showLabel;
 
   PersonApplicationTile({
     super.key,
+    required this.applicationData,
     this.header = '',
     this.title = '',
     this.label = '',
@@ -42,11 +43,13 @@ class PersonApplicationTile extends StatelessWidget {
     this.popupItemsBuilder,
     this.expandableChild = const [],
     this.onLongPress,
-    this.opportunityID = 0,
-    this.opportunityProgram = 'GTa',
-    required this.status,
-    required this.pictureURL,
   }) {
+    status = applicationData['status'];
+    final String programmeShortNameDisplay =
+        applicationData['opportunity']['programmes'][0]['short_name_display'];
+    final String pictureURL =
+        'https://aiesec-logos.s3.eu-west-1.amazonaws.com/${programmeShortNameDisplay.toUpperCase()}%20LOGO%20COLOR.png';
+
     switch (status) {
       case 'open':
         _statusColor = const Color(0xFF037EF3);
@@ -84,8 +87,7 @@ class PersonApplicationTile extends StatelessWidget {
         Expanded(
           child: GestureDetector(
             onLongPressStart: onLongPress != null
-                ? (details) =>
-                    onLongPress!(details, opportunityID, opportunityProgram)
+                ? (details) => onLongPress!(details, applicationData)
                 : null,
             child: ExpansionTile(
               tilePadding: const EdgeInsets.only(left: 16.0),

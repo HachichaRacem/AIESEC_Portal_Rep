@@ -62,15 +62,10 @@ class ApplicationsScreen extends GetView<ApplicationsController> {
                                   final hostDetails =
                                       '${applicationData['opportunity']['host_lc']['name']} - ${applicationData['opportunity']['host_lc']['parent']['name']}'
                                           .capitalizeAllWordsFirstLetter();
-                                  final String programmeShortNameDisplay =
-                                      applicationData['opportunity']
-                                              ['programmes'][0]
-                                          ['short_name_display'];
+
                                   final String applicantName =
                                       '${applicationData['person']['full_name']}'
                                           .capitalizeAllWordsFirstLetter();
-                                  final opportunityProgrammePictureURL =
-                                      'https://aiesec-logos.s3.eu-west-1.amazonaws.com/${programmeShortNameDisplay.toUpperCase()}%20LOGO%20COLOR.png';
                                   final TextStyle stepperTitle =
                                       Get.theme.textTheme.labelSmall!.copyWith(
                                           fontWeight: FontWeight.bold,
@@ -189,11 +184,10 @@ class ApplicationsScreen extends GetView<ApplicationsController> {
                                     padding:
                                         const EdgeInsets.only(bottom: 18.0),
                                     child: PersonApplicationTile(
+                                      applicationData: applicationData,
                                       header: opportunityTitle,
                                       title: hostDetails,
                                       label: 'By $applicantName',
-                                      pictureURL:
-                                          opportunityProgrammePictureURL,
                                       pictureRadius: 36,
                                       expandableChild: [
                                         AnotherStepper(
@@ -220,7 +214,6 @@ class ApplicationsScreen extends GetView<ApplicationsController> {
                                           )
                                       ],
                                       expandable: true,
-                                      status: applicationData['status'],
                                       showExtraActionsDots: true,
                                       popupItemsBuilder: (context) => [
                                         PopupMenuItem(
@@ -239,6 +232,16 @@ class ApplicationsScreen extends GetView<ApplicationsController> {
                                           value: 1,
                                           child: Text(
                                             "View Opportunity",
+                                            style:
+                                                Get.theme.textTheme.labelSmall,
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          onTap: () => controller
+                                              .onShowOpportunityManagers(index),
+                                          value: 2,
+                                          child: Text(
+                                            "View Managers",
                                             style:
                                                 Get.theme.textTheme.labelSmall,
                                           ),

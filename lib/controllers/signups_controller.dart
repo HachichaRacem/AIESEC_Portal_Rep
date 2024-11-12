@@ -53,7 +53,7 @@ class SignupsController extends GetxController {
   final RxList signupsData = RxList.empty();
 
   final String _peopleDataQuery =
-      'data{id referral_type created_at gender dob full_name first_name profile_photo cvs{id url}contact_detail{email phone} lc_alignment{keywords} person_profile{selected_programmes backgrounds{id name}} secure_identity_email opportunity_applications{total_count nodes{status created_at date_matched date_approved date_realized experience_end_date date_approval_broken matched_or_rejected_at updated_at rejection_reason{name}opportunity{id title programmes{short_name_display}host_lc{id name parent{id name}}}}}managers{id full_name profile_photo}}';
+      'data{id referral_type created_at gender dob full_name first_name profile_photo cvs{id url}contact_detail{email phone} lc_alignment{keywords} person_profile{selected_programmes backgrounds{id name}} secure_identity_email opportunity_applications{total_count nodes{status created_at date_matched date_approved date_realized experience_end_date date_approval_broken matched_or_rejected_at updated_at rejection_reason{name}opportunity{id title programmes{short_name_display} managers{full_name profile_photo current_positions{function{name}role{name}}contact_detail{country_code phone email facebook}} host_lc{id name parent{id name}}}}}managers{id full_name profile_photo}}';
 
   String _filtersCustomDateRangeStart = '';
   String _filtersCustomDateRangeEnd = '';

@@ -30,11 +30,6 @@ class PersonOpportunitiesApplications extends GetView<HomeController> {
                   final hostDetails =
                       '${applicationData['opportunity']['host_lc']['name']} - ${applicationData['opportunity']['host_lc']['parent']['name']}'
                           .capitalizeAllWordsFirstLetter();
-                  final String programmeShortNameDisplay =
-                      applicationData['opportunity']['programmes'][0]
-                          ['short_name_display'];
-                  final opportunityProgrammePictureURL =
-                      'https://aiesec-logos.s3.eu-west-1.amazonaws.com/${programmeShortNameDisplay.toUpperCase()}%20LOGO%20COLOR.png';
                   final TextStyle stepperTitle = Get.theme.textTheme.labelSmall!
                       .copyWith(fontWeight: FontWeight.bold, fontSize: 9);
                   final TextStyle stepperSubtitle =
@@ -138,9 +133,9 @@ class PersonOpportunitiesApplications extends GetView<HomeController> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 18.0),
                     child: PersonApplicationTile(
+                      applicationData: applicationData,
                       header: opportunityTitle,
                       title: hostDetails,
-                      pictureURL: opportunityProgrammePictureURL,
                       pictureRadius: 36,
                       expandableChild: [
                         AnotherStepper(
@@ -162,10 +157,6 @@ class PersonOpportunitiesApplications extends GetView<HomeController> {
                           )
                       ],
                       expandable: true,
-                      status: applicationData['status'],
-                      opportunityID:
-                          int.tryParse(applicationData['opportunity']['id']) ??
-                              0,
                       onLongPress: controller.onPersonApplicationLongPress,
                     ),
                   );

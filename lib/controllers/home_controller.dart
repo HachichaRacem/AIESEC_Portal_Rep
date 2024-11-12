@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:thyna_core/controllers/main_controller.dart';
+import 'package:thyna_core/widgets/opportunity_managers_dialog.dart';
 import 'package:thyna_core/widgets/toast_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -220,7 +221,7 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
     }
   }
 
-  void onShowOpportunityItemTap(int oppId, String oppProgramme) async {
+  void _onShowOpportunityItemTap(int oppId, String oppProgramme) async {
     String url = 'https://www.aiesec.org/opportunity/';
     if (oppProgramme == 'GTa') {
       url += 'global-talent/$oppId';
@@ -242,8 +243,18 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
     }
   }
 
+  void _onViewManagersItemTap(List managers) async {
+    await Get.dialog(OpportunityManagersDialog(
+      managers: managers,
+    ));
+  }
+
   void onPersonApplicationLongPress(
-      LongPressStartDetails details, int oppID, String oppProgramme) {
+      LongPressStartDetails details, Map applicationData) {
+    final oppID = applicationData['opportunity']['id'];
+    final oppProgramme =
+        applicationData['opportunity']['programmes'][0]['short_name_display'];
+
     final offset = details.globalPosition;
     final RelativeRect position = RelativeRect.fromLTRB(
         offset.dx, offset.dy, Get.width - offset.dx, Get.height - offset.dy);
@@ -252,7 +263,14 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
         height: 20,
         padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12),
         child: Text("Open opportunity", style: Get.textTheme.bodySmall),
-        onTap: () => onShowOpportunityItemTap(oppID, oppProgramme),
+        onTap: () => _onShowOpportunityItemTap(oppID, oppProgramme),
+      ),
+      PopupMenuItem(
+        height: 20,
+        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12),
+        child: Text("View managers", style: Get.textTheme.bodySmall),
+        onTap: () =>
+            _onViewManagersItemTap(applicationData['opportunity']['managers']),
       )
     ]);
   }

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:thyna_core/controllers/main_controller.dart';
 import 'package:thyna_core/controllers/signups_controller.dart';
 import 'package:thyna_core/widgets/applications_filter_dialog.dart';
+import 'package:thyna_core/widgets/opportunity_managers_dialog.dart';
 import 'package:thyna_core/widgets/toast_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -137,7 +138,7 @@ class ApplicationsController extends GetxController {
       'Content-Type': 'application/json'
     };
     final String query =
-        '{allOpportunityApplication(filters:$filters per_page:500){data{status created_at date_matched date_approved date_realized experience_end_date date_approval_broken matched_or_rejected_at updated_at rejection_reason{name}person{full_name profile_photo cvs{id url}contact_detail{email phone}secure_identity_email}opportunity{id title programmes{short_name_display}host_lc{id name parent{id name}}}}paging{total_items}}}';
+        '{allOpportunityApplication(filters:$filters per_page:500){data{status created_at date_matched date_approved date_realized experience_end_date date_approval_broken matched_or_rejected_at updated_at rejection_reason{name}person{full_name profile_photo cvs{id url}contact_detail{email phone}secure_identity_email}opportunity{id title programmes{short_name_display} managers{full_name profile_photo current_positions{function{name}role{name}}contact_detail{country_code phone email facebook}} host_lc{id name parent{id name}}}}paging{total_items}}}';
     final payload = {
       'query': query,
     };
@@ -152,8 +153,6 @@ class ApplicationsController extends GetxController {
       applicationsData.value =
           response.data['data']['allOpportunityApplication'];
       applicationsDataStatus.value = 2;
-      Get.log(
-          "onFiltersDialogApplyBtnClick (applications) : $applicationsData");
     } catch (e, stack) {
       applicationsDataStatus.value = 3;
       Get.log("onFiltersDialogApplyBtnClick (applications) : $e");
@@ -196,5 +195,12 @@ class ApplicationsController extends GetxController {
         Get.log("onShowOpportunityItemTap: $e");
       }
     }
+  }
+
+  void onShowOpportunityManagers(int applicationIndex) async {
+    await Get.dialog(OpportunityManagersDialog(
+      managers: applicationsData['data'][applicationIndex]['opportunity']
+          ['managers'],
+    ));
   }
 }

@@ -182,12 +182,10 @@ class HomeScreen extends GetView<HomeController> {
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 6.0),
                                     child: PersonApplicationTile(
+                                      applicationData: applicationData,
                                       header: personName,
                                       title: opportunityTitle,
                                       label: hostDetails,
-                                      pictureURL: applicationData['person']
-                                          ['profile_photo'],
-                                      status: applicationData['status'],
                                     ),
                                   );
                                 },
