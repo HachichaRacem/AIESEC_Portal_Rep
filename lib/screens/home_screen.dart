@@ -103,10 +103,6 @@ class HomeScreen extends GetView<HomeController> {
                                   (index) => CircularPerson(
                                     personData: controller.mainController.user
                                         .managedPeople[index],
-                                    hasSVGPicture: (controller.mainController
-                                                .user.managedPeople[index]
-                                            ['profile_photo'] as String)
-                                        .contains('.svg'),
                                   ),
                                 ),
                               ),
@@ -202,77 +198,3 @@ class HomeScreen extends GetView<HomeController> {
     );
   }
 }
-
-
-
-/**
- Replace with HomeAnalysisData if needed
-
-
- PageView(
-  controller:
-      controller.overviewCardsPageController,
-  children: List.generate(
-    controller.statuses.length,
-    (index) => controller.overviewCardsStatus.value == 0
-        ? Shimmer.fromColors(
-            baseColor: const Color(0xFFEBEBF4),
-            highlightColor:
-                Get.theme.colorScheme.surface,
-            child: const OverviewCard(
-                status: "",
-                month: "",
-                talentValue: 0,
-                teachingValue: 0))
-        : OverviewCard(
-            status: controller.statuses[index],
-            month: controller.months[
-                controller.currentMonth.month -
-                    1],
-            talentValue: controller.overviewCardsData['talent']![
-                controller.statuses[index]
-                    .toLowerCase()]!,
-            teachingValue: controller
-                    .overviewCardsData['teaching']![
-                controller.statuses[index].toLowerCase()]!),
-  ),
-),
-
-*/
-
-/**
-
-Page indicators below the overviewCards
- 
- Padding(
-                  padding: const EdgeInsets.only(top: 20.0, bottom: 12),
-                  child: Center(
-                    child: Obx(
-                      () => controller.overviewCardsStatus.value == 0
-                          ? Shimmer.fromColors(
-                              baseColor: const Color(0xFFEBEBF4),
-                              highlightColor: Get.theme.colorScheme.surface,
-                              child: SmoothPageIndicator(
-                                controller:
-                                    controller.overviewCardsPageController,
-                                count: controller.statuses.length,
-                                effect:
-                                    const WormEffect(dotHeight: 8, dotWidth: 8),
-                              ),
-                            )
-                          : SmoothPageIndicator(
-                              controller:
-                                  controller.overviewCardsPageController,
-                              count: controller.statuses.length,
-                              effect: WormEffect(
-                                  dotHeight: 8,
-                                  dotWidth: 8,
-                                  dotColor: Get.theme.colorScheme.surfaceDim,
-                                  activeDotColor: const Color(0xff4b79a1)),
-                            ),
-                    ),
-                  ),
-                ),
-
-
- */

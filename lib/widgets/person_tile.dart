@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:thyna_core/controllers/main_controller.dart';
+import 'package:thyna_core/widgets/cache_image.dart';
 
 class PersonTile extends StatelessWidget {
   final Map personData;
@@ -11,11 +9,8 @@ class PersonTile extends StatelessWidget {
   final VoidCallback? onAddManagerClick;
 
   late final String _personName;
-  late final String _pictureURL;
-  late final bool _hasSVGPicture;
   late final bool _hasManagers;
   late final bool _showAddManagerIcon;
-  late final Future<FileResponse> _pictureFuture;
 
   PersonTile(
       {super.key,
@@ -25,8 +20,6 @@ class PersonTile extends StatelessWidget {
     _personName =
         (personData['full_name'] as String).capitalizeAllWordsFirstLetter();
 
-    _pictureURL = personData['profile_photo'];
-    _hasSVGPicture = _pictureURL.contains('.svg');
     _hasManagers = (personData['managers'] as List).isNotEmpty;
     if (_hasManagers) {
       final List managers = personData['managers'] as List;
@@ -37,45 +30,16 @@ class PersonTile extends StatelessWidget {
     } else {
       _showAddManagerIcon = true;
     }
-    _pictureFuture =
-        DefaultCacheManager().getImageFile(personData['profile_photo']).single;
   }
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SizedBox(
-          height: 36,
-          width: 36,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(40),
-            child: FutureBuilder<FileResponse>(
-              future: _pictureFuture,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final FileInfo fileInfo = snapshot.requireData as FileInfo;
-                  if (!_hasSVGPicture) {
-                    return Image.file(fileInfo.file);
-                  } else {
-                    return SvgPicture.file(fileInfo.file);
-                  }
-                } else {
-                  if (snapshot.hasError) {
-                    Get.log(
-                        "[PersonTile] Error loading SVG Picture : ${snapshot.error}");
-                    Get.log(
-                        "If this occurs, you might want to update _pictureFuture");
-                  }
-                  return Shimmer.fromColors(
-                    baseColor: const Color(0xFFEBEBF4),
-                    highlightColor: Get.theme.colorScheme.surface,
-                    child: const ColoredBox(color: Colors.red),
-                  );
-                }
-              },
-            ),
-          ),
+        CacheImage(
+          imageURL: personData['profile_photo'],
+          width: 32,
+          height: 32,
         ),
         Flexible(
           child: Padding(
@@ -116,42 +80,9 @@ class PersonTile extends StatelessWidget {
                                   '${personData['managers'][index]['full_name']}'
                                       .capitalizeAllWordsFirstLetter(),
                               triggerMode: TooltipTriggerMode.longPress,
-                              child: SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(40),
-                                  child: FutureBuilder<FileResponse>(
-                                    future: DefaultCacheManager()
-                                        .getImageFile(personData['managers']
-                                            [index]['profile_photo'])
-                                        .single,
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        final FileInfo fileInfo =
-                                            snapshot.requireData as FileInfo;
-                                        final bool hasSVGPicture =
-                                            personData['managers'][index]
-                                                    ['profile_photo']
-                                                .contains('.svg');
-                                        if (!hasSVGPicture) {
-                                          return Image.file(fileInfo.file);
-                                        } else {
-                                          return SvgPicture.file(fileInfo.file);
-                                        }
-                                      } else {
-                                        return Shimmer.fromColors(
-                                          baseColor: const Color(0xFFEBEBF4),
-                                          highlightColor:
-                                              Get.theme.colorScheme.surface,
-                                          child: const ColoredBox(
-                                              color: Colors.red),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ),
+                              child: CacheImage(
+                                  imageURL: personData['managers'][index]
+                                      ['profile_photo']),
                             ),
                           ),
                         ),

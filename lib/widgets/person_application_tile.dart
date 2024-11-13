@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:get/get.dart';
+import 'package:thyna_core/widgets/cache_image.dart';
 
 // This thing should be refactored to accept the whole data :')
 
@@ -21,12 +19,10 @@ class PersonApplicationTile extends StatelessWidget {
   final Function(LongPressStartDetails, Map)? onLongPress;
 
   late final String status;
+  late final String pictureURL;
 
   late final Color _statusColor;
 
-  late final Future<FileResponse> _pictureFuture;
-
-  late final bool _isPictureSVG;
   late final bool _showHeader;
   late final bool _showTitle;
   late final bool _showLabel;
@@ -47,7 +43,7 @@ class PersonApplicationTile extends StatelessWidget {
     status = applicationData['status'];
     final String programmeShortNameDisplay =
         applicationData['opportunity']['programmes'][0]['short_name_display'];
-    final String pictureURL =
+    pictureURL =
         'https://aiesec-logos.s3.eu-west-1.amazonaws.com/${programmeShortNameDisplay.toUpperCase()}%20LOGO%20COLOR.png';
 
     switch (status) {
@@ -72,9 +68,6 @@ class PersonApplicationTile extends StatelessWidget {
       default:
         _statusColor = const Color(0xFF52565E);
     }
-    _pictureFuture = DefaultCacheManager().getImageFile(pictureURL).single;
-    _isPictureSVG = pictureURL.contains('.svg');
-
     _showHeader = header.isNotEmpty;
     _showTitle = title.isNotEmpty;
     _showLabel = label.isNotEmpty;
@@ -100,33 +93,10 @@ class PersonApplicationTile extends StatelessWidget {
               title: Row(
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  SizedBox(
-                    height: pictureRadius,
-                    width: pictureRadius,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(40),
-                      child: FutureBuilder<FileResponse>(
-                        future: _pictureFuture,
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            final FileInfo fileInfo =
-                                snapshot.requireData as FileInfo;
-                            if (!_isPictureSVG) {
-                              return Image.file(fileInfo.file);
-                            } else {
-                              return SvgPicture.file(fileInfo.file);
-                            }
-                          } else {
-                            return Shimmer.fromColors(
-                              baseColor: const Color(0xFFEBEBF4),
-                              highlightColor: Get.theme.colorScheme.surface,
-                              child: const ColoredBox(color: Colors.red),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                  ),
+                  CacheImage(
+                      imageURL: pictureURL,
+                      height: pictureRadius,
+                      width: pictureRadius),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Row(

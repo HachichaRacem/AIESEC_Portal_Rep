@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:thyna_core/widgets/cache_image.dart';
 import 'package:thyna_core/widgets/toast_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -20,11 +18,6 @@ class OpportunityManagersDialog extends StatelessWidget {
 
     final String? managerPhone = managers[index]['contact_detail']['phone'];
 
-    final bool hasSVGPicture = managerPicture.contains(".svg");
-
-    final Future<FileResponse> managerPictureFuture =
-        DefaultCacheManager().getImageFile(managerPicture).single;
-
     return ListTile(
       dense: true,
       visualDensity: VisualDensity.compact,
@@ -38,38 +31,7 @@ class OpportunityManagersDialog extends StatelessWidget {
           fontSize: 10,
         ),
       ),
-      leading: SizedBox(
-        height: 42,
-        width: 42,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(40),
-          child: FutureBuilder<FileResponse>(
-            future: managerPictureFuture,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                final FileInfo fileInfo = snapshot.requireData as FileInfo;
-                if (!hasSVGPicture) {
-                  return Image.file(fileInfo.file);
-                } else {
-                  return SvgPicture.file(fileInfo.file);
-                }
-              } else {
-                if (snapshot.hasError) {
-                  Get.log(
-                      "[OpportunityManagersDialog] Error loading SVG Picture : ${snapshot.error}");
-                  Get.log(
-                      "If this occurs, you might want to update managerPictureFuture");
-                }
-                return Shimmer.fromColors(
-                  baseColor: const Color(0xFFEBEBF4),
-                  highlightColor: Get.theme.colorScheme.surface,
-                  child: const ColoredBox(color: Colors.red),
-                );
-              }
-            },
-          ),
-        ),
-      ),
+      leading: CacheImage(imageURL: managerPicture),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

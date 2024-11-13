@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:thyna_core/controllers/home_controller.dart';
+import 'package:thyna_core/widgets/cache_image.dart';
 import 'package:thyna_core/widgets/person_about.dart';
 import 'package:thyna_core/widgets/person_opportunities_applications.dart';
 
 class PersonSheet extends GetView<HomeController> {
   final Map personData;
 
-  late final Future<FileResponse> _pictureFuture;
-  late final bool _hasSVGPicture;
   late final String _personName;
   late final bool _hasPhoneProvided;
   late final bool _hasCVProvided;
@@ -23,9 +19,6 @@ class PersonSheet extends GetView<HomeController> {
     super.key,
     required this.personData,
   }) {
-    _pictureFuture =
-        DefaultCacheManager().getImageFile(personData['profile_photo']).single;
-    _hasSVGPicture = personData['profile_photo'].contains(".svg");
     _personName =
         (personData['full_name'] as String).capitalizeAllWordsFirstLetter();
     _hasApplications =
@@ -65,37 +58,10 @@ class PersonSheet extends GetView<HomeController> {
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  height: 74,
-                  width: 74,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(40),
-                    child: FutureBuilder<FileResponse>(
-                      future: _pictureFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          final FileInfo fileInfo =
-                              snapshot.requireData as FileInfo;
-                          if (!_hasSVGPicture) {
-                            return Image.file(fileInfo.file);
-                          } else {
-                            return SvgPicture.file(fileInfo.file);
-                          }
-                        } else {
-                          if (snapshot.hasError) {
-                            Get.log(
-                                "Error loading profile photo in managed person sheet :");
-                            Get.log("${snapshot.error}");
-                          }
-                          return Shimmer.fromColors(
-                            baseColor: const Color(0xFFEBEBF4),
-                            highlightColor: Get.theme.colorScheme.surface,
-                            child: const ColoredBox(color: Colors.red),
-                          );
-                        }
-                      },
-                    ),
-                  ),
+                CacheImage(
+                  imageURL: personData['profile_photo'],
+                  height: 72,
+                  width: 72,
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 6.0, bottom: 12),
