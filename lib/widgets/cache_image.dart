@@ -20,8 +20,8 @@ class CacheImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 42,
-      width: 42,
+      height: height,
+      width: width,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(40),
         child: FutureBuilder<FileResponse>(

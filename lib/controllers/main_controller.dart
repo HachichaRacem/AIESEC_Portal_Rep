@@ -18,6 +18,7 @@ class MainController extends GetxController {
   final PageController mainPageController = PageController();
   final RxBool showProgressIndicator = false.obs;
 
+  // Constants
   final Map<String, int> backgrounds = {
     "Accounting": 10224,
     "Aerospace engineering": 10225,
