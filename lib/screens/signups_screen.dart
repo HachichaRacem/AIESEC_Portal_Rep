@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:thyna_core/controllers/signups_controller.dart';
-import 'package:thyna_core/widgets/person_tile.dart';
 
 class SignupsScreen extends GetView<SignupsController> {
   const SignupsScreen({super.key});
@@ -122,37 +121,16 @@ class SignupsScreen extends GetView<SignupsController> {
                                 ? SingleChildScrollView(
                                     padding: const EdgeInsets.only(bottom: 60),
                                     child: Column(
-                                      children: List.generate(
-                                        controller.signupsData.length,
-                                        (index) {
-                                          List<int> managerIDs = [];
-                                          for (final manager in controller
-                                              .signupsData[index]['managers']) {
-                                            managerIDs
-                                                .add(int.parse(manager['id']));
-                                          }
-                                          return PersonTile(
-                                            personData: controller.signupsData
-                                                .elementAt(index),
-                                            onViewDetailsClick: () => controller
-                                                .onPersonTileClick(index),
-                                            onAddManagerClick: () =>
-                                                controller.onAddManagerClick(
-                                              int.parse(controller
-                                                  .signupsData[index]['id']),
-                                              managerIDs,
-                                            ),
-                                          );
-                                        },
-                                      )..add(
-                                          Text(
-                                            "A total of ${controller.signupsData.length} people found",
-                                            style: Get.textTheme.labelSmall!
-                                                .copyWith(
-                                              color: Colors.black38,
-                                            ),
+                                      children: [
+                                        ...controller.personTiles,
+                                        Text(
+                                          "A total of ${controller.signupsData.length} people found",
+                                          style: Get.textTheme.labelSmall!
+                                              .copyWith(
+                                            color: Colors.black38,
                                           ),
                                         ),
+                                      ],
                                     ),
                                   )
                                 : Center(

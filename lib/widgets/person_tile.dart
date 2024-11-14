@@ -81,6 +81,8 @@ class PersonTile extends StatelessWidget {
                                       .capitalizeAllWordsFirstLetter(),
                               triggerMode: TooltipTriggerMode.longPress,
                               child: CacheImage(
+                                  width: 18,
+                                  height: 18,
                                   imageURL: personData['managers'][index]
                                       ['profile_photo']),
                             ),

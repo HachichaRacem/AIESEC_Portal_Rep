@@ -36,7 +36,6 @@ class ExpaUser {
     hasSVGPicture = profilePicture.contains(".svg");
 
     managedPeople.value = json['people']['data'];
-    Get.log("applications : ${json['allOpportunityApplication']['data']}");
     recentApplications = json['allOpportunityApplication']['data'];
   }
 

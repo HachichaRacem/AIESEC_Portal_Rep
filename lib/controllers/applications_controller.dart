@@ -138,7 +138,7 @@ class ApplicationsController extends GetxController {
       'Content-Type': 'application/json'
     };
     final String query =
-        '{allOpportunityApplication(filters:$filters per_page:500){data{status created_at date_matched date_approved date_realized experience_end_date date_approval_broken matched_or_rejected_at updated_at rejection_reason{name}person{full_name profile_photo cvs{id url}contact_detail{email phone}secure_identity_email}opportunity{id title programmes{short_name_display} managers{full_name profile_photo current_positions{function{name}role{name}}contact_detail{country_code phone email facebook}} host_lc{id name parent{id name}}}}paging{total_items}}}';
+        '{allOpportunityApplication(filters:$filters per_page:500){data{status created_at date_matched date_approved date_realized experience_end_date date_approval_broken matched_or_rejected_at updated_at rejection_reason{name}person{id full_name profile_photo cvs{id url}contact_detail{email phone}secure_identity_email}opportunity{id title programmes{short_name_display} managers{full_name profile_photo current_positions{function{name}role{name}}contact_detail{country_code phone email facebook}} host_lc{id name parent{id name}}}}paging{total_items}}}';
     final payload = {
       'query': query,
     };
@@ -160,14 +160,18 @@ class ApplicationsController extends GetxController {
     }
   }
 
-  void onShowPersonItemTap(int applicationIndex) {
-    final SignupsController signupsController = Get.find();
+  Future<void> onShowPersonItemTap(int applicationIndex) async {
+    final SignupsController signupsController =
+        Get.putOrFind(() => SignupsController());
     final String applicantName =
         applicationsData['data'][applicationIndex]['person']['full_name'];
+    final String applicantID =
+        applicationsData['data'][applicationIndex]['person']['id'];
     signupsController.searchQuery.value = applicantName;
     signupsController.searchBarController.text =
         applicantName.capitalizeAllWordsFirstLetter();
-    signupsController.onSearchBarConfirm('');
+    signupsController.onSearchBarConfirm('',
+        animateTile: true, personID: applicantID);
     _mainController.onNavigationDestinationTap(1);
   }
 
@@ -194,6 +198,31 @@ class ApplicationsController extends GetxController {
         ToastCards.error(message: 'Could not copy link to clipboard.');
         Get.log("onShowOpportunityItemTap: $e");
       }
+    }
+  }
+
+  String _formatOpportunityLink(String oppId, String oppProgramme) {
+    String url = 'https://www.aiesec.org/opportunity/';
+    if (oppProgramme == 'GTa') {
+      url += 'global-talent/$oppId';
+    } else if (oppProgramme == 'GTe') {
+      url += 'global-teacher/$oppId';
+    }
+    return url;
+  }
+
+  void onCopyLinkItemTap(int applicationIndex) async {
+    final String oppId =
+        applicationsData['data'][applicationIndex]['opportunity']['id'];
+    final String oppProgramme = applicationsData['data'][applicationIndex]
+        ['opportunity']['programmes'][0]['short_name_display'];
+    final String url = _formatOpportunityLink(oppId, oppProgramme);
+    try {
+      await Clipboard.setData(ClipboardData(text: url));
+      ToastCards.success(message: 'Link copied to clipboard.');
+    } catch (e) {
+      ToastCards.error(message: 'Could not copy link to clipboard.');
+      Get.log("[Applications Controller] : onCopyLinkItemTap -> $e");
     }
   }
 

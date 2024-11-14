@@ -47,7 +47,7 @@ class AuthController extends GetxController {
       Get.log("$_tag - USER sent to login screen ($e)");
       sendToSignIn.value = true;
     } catch (e, stack) {
-      Get.log("Something went wrong");
+      Get.log("[$_tag] Something went wrong");
       Get.log("$_tag - $e");
       Get.log("$_tag - $stack");
       stackIndex.value = 2;

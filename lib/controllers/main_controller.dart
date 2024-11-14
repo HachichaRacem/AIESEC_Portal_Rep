@@ -105,8 +105,15 @@ class MainController extends GetxController {
   void onInit() {
     dioClient.interceptors.add(InterceptorsWrapper(
       onError: (error, handler) async {
-        Get.log('[$_tag]: $error');
         if (error.response != null) {
+          Get.log(
+              '[$_tag - Dio Interceptor]: Error from : ${error.response?.realUri.toString()}');
+          Get.log(
+              '[$_tag - Dio Interceptor]: Status code : ${error.response?.statusCode}');
+          Get.log(
+              '[$_tag - Dio Interceptor]: Error response : ${error.response?.data}');
+          Get.log(
+              '[$_tag - Dio Interceptor]: Error message : ${error.message}');
           // Unauthorized/Expired token
           if (error.response?.statusCode == 401) {
             Get.log(
@@ -181,6 +188,8 @@ class MainController extends GetxController {
             Get.offAllNamed('/auth');
             return handler.reject(error);
           }
+        } else {
+          Get.log('[$_tag - Dio Interceptor]: $error');
         }
         return handler.reject(error);
       },

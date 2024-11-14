@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:thyna_core/controllers/main_controller.dart';
 import 'package:thyna_core/widgets/person_sheet.dart';
+import 'package:thyna_core/widgets/person_tile.dart';
 import 'package:thyna_core/widgets/signups_filter_dialog.dart';
 import 'package:thyna_core/widgets/toast_card.dart';
 
-class SignupsController extends GetxController {
+class SignupsController extends GetxController
+    with GetSingleTickerProviderStateMixin {
   // This controller is responsible for:
   //  - Keeping the filters variables
   //  - Show filters dialog on FAB click
@@ -51,6 +53,14 @@ class SignupsController extends GetxController {
   final RxInt filtersBackgroundID = 0.obs;
 
   final RxList signupsData = RxList.empty();
+  List<Widget> personTiles = [];
+  late final AnimationController foundTileAnimCtrl = AnimationController(
+    vsync: this,
+    lowerBound: 0.0,
+    upperBound: 0.1,
+    duration: const Duration(milliseconds: 300),
+  )..addListener(() => foundTileScaleValue.value = foundTileAnimCtrl.value);
+  final RxDouble foundTileScaleValue = 0.0.obs;
 
   final String _peopleDataQuery =
       'data{id referral_type created_at gender dob full_name first_name profile_photo cvs{id url}contact_detail{email phone} lc_alignment{keywords} person_profile{selected_programmes backgrounds{id name}} secure_identity_email opportunity_applications{total_count nodes{status created_at date_matched date_approved date_realized experience_end_date date_approval_broken matched_or_rejected_at updated_at rejection_reason{name}opportunity{id title programmes{short_name_display} managers{full_name profile_photo current_positions{function{name}role{name}}contact_detail{country_code phone email facebook}} host_lc{id name parent{id name}}}}}managers{id full_name profile_photo}}';
@@ -79,7 +89,8 @@ class SignupsController extends GetxController {
     searchBarFocusNode.requestFocus();
   }
 
-  Future<void> onSearchBarConfirm(String? value) async {
+  Future<void> onSearchBarConfirm(String? value,
+      {bool animateTile = false, String personID = ''}) async {
     if (searchQuery.isNotEmpty) {
       final headers = {
         'Authorization': mainController.user.accessToken,
@@ -99,6 +110,33 @@ class SignupsController extends GetxController {
           options: Options(headers: headers),
         );
         signupsData.value = response.data['data']['people']['data'];
+        generatePersonTiles();
+        if (animateTile) {
+          debugPrint("animateTile is true");
+          if (personID.isNotEmpty) {
+            for (int i = 0; i < personTiles.length; i++) {
+              if (personTiles[i] is PersonTile) {
+                final PersonTile personTile = personTiles[i] as PersonTile;
+                if (personTile.personData['id'] == personID) {
+                  debugPrint(
+                      "Found the tile in the personTiles list (matched $personID), animating...");
+                  personTiles[i] = Obx(
+                    () => Transform.scale(
+                        scale: 1 + foundTileScaleValue.value,
+                        child: personTile),
+                  );
+                  break;
+                }
+              }
+            }
+            Future.delayed(
+              Durations.short3,
+              () => foundTileAnimCtrl.forward().then(
+                    (_) => foundTileAnimCtrl.reverse(),
+                  ),
+            );
+          }
+        }
         signupsDataStatus.value = 2;
       } catch (e, stack) {
         signupsDataStatus.value = 3;
@@ -125,11 +163,9 @@ class SignupsController extends GetxController {
           '${dateRange.start.year}-${dateRange.start.month.toString().padLeft(2, '0')}-${dateRange.start.day.toString().padLeft(2, '0')} 00:00:00';
       _filtersCustomDateRangeEnd =
           '${dateRange.end.year}-${dateRange.end.month.toString().padLeft(2, '0')}-${dateRange.end.day.toString().padLeft(2, '0')} 23:59:59';
-      debugPrint("dateRange: $dateRange");
     } else {
       filtersCustomDateRange.value = '';
       selectedDateRangeIndex.value = 0;
-      Get.log("dateRange: canceled");
     }
   }
 
@@ -202,13 +238,33 @@ class SignupsController extends GetxController {
         options: Options(headers: headers),
       );
       signupsData.value = response.data['data']['people']['data'];
+      generatePersonTiles();
       signupsDataStatus.value = 2;
-      Get.log("onFiltersDialogApplyBtnClick : $signupsData");
     } catch (e, stack) {
       signupsDataStatus.value = 3;
       Get.log("onFiltersDialogApplyBtnClick : $e");
       Get.log("onFiltersDialogApplyBtnClick : $stack");
     }
+  }
+
+  void generatePersonTiles() {
+    personTiles = List.generate(
+      signupsData.length,
+      (index) {
+        List<int> managerIDs = [];
+        for (final manager in signupsData[index]['managers']) {
+          managerIDs.add(int.parse(manager['id']));
+        }
+        return PersonTile(
+          personData: signupsData.elementAt(index),
+          onViewDetailsClick: () => onPersonTileClick(index),
+          onAddManagerClick: () => onAddManagerClick(
+            int.parse(signupsData[index]['id']),
+            managerIDs,
+          ),
+        );
+      },
+    );
   }
 
   void onPersonTileClick(int index) {
@@ -250,7 +306,6 @@ class SignupsController extends GetxController {
         data: payload,
         options: Options(headers: headers),
       );
-      Get.log("onAddManagerClick : ${response.data}");
       mainController.user.managedPeople
           .add(response.data['data']['updatePerson']);
       // To refresh the screen and show the updated list

@@ -23,7 +23,6 @@ class PersonOpportunitiesApplications extends GetView<HomeController> {
                 (index) {
                   final Map applicationData =
                       personData['opportunity_applications']['nodes'][index];
-                  debugPrint("ID : ${applicationData['opportunity']}");
                   final String opportunityTitle =
                       '${applicationData['opportunity']['title']}'
                           .capitalizeAllWordsFirstLetter();
@@ -68,7 +67,6 @@ class PersonOpportunitiesApplications extends GetView<HomeController> {
                       } else if (status == 'completed') {
                         date = applicationData['updated_at'];
                       } else {
-                        Get.log('date_$status');
                         date = applicationData['date_$status'];
                       }
                       stepperList.add(

@@ -110,7 +110,6 @@ class ApplicationsScreen extends GetView<ApplicationsController> {
                                       } else if (status == 'completed') {
                                         date = applicationData['updated_at'];
                                       } else {
-                                        Get.log('date_$status');
                                         date = applicationData['date_$status'];
                                       }
                                       stepperList.add(
@@ -221,7 +220,17 @@ class ApplicationsScreen extends GetView<ApplicationsController> {
                                               .onShowPersonItemTap(index),
                                           value: 0,
                                           child: Text(
-                                            "View Person",
+                                            "View person",
+                                            style:
+                                                Get.theme.textTheme.labelSmall,
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          onTap: () => controller
+                                              .onCopyLinkItemTap(index),
+                                          value: 1,
+                                          child: Text(
+                                            "Copy link",
                                             style:
                                                 Get.theme.textTheme.labelSmall,
                                           ),
@@ -231,7 +240,7 @@ class ApplicationsScreen extends GetView<ApplicationsController> {
                                               .onShowOpportunityItemTap(index),
                                           value: 1,
                                           child: Text(
-                                            "View Opportunity",
+                                            "View opportunity",
                                             style:
                                                 Get.theme.textTheme.labelSmall,
                                           ),
@@ -241,7 +250,7 @@ class ApplicationsScreen extends GetView<ApplicationsController> {
                                               .onShowOpportunityManagers(index),
                                           value: 2,
                                           child: Text(
-                                            "View Managers",
+                                            "View managers",
                                             style:
                                                 Get.theme.textTheme.labelSmall,
                                           ),

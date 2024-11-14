@@ -221,25 +221,24 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
     }
   }
 
-  void _onShowOpportunityItemTap(int oppId, String oppProgramme) async {
+  String _formatOpportunityLink(int oppId, String oppProgramme) {
     String url = 'https://www.aiesec.org/opportunity/';
     if (oppProgramme == 'GTa') {
       url += 'global-talent/$oppId';
     } else if (oppProgramme == 'GTe') {
       url += 'global-teacher/$oppId';
     }
+    return url;
+  }
+
+  void _onShowOpportunityItemTap(int oppId, String oppProgramme) async {
+    final String url = _formatOpportunityLink(oppId, oppProgramme);
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     } else {
       ToastCards.warning(
           message: 'Could not open browser, copying link instead...');
-      try {
-        await Clipboard.setData(ClipboardData(text: url));
-        ToastCards.success(message: 'Link copied to clipboard.');
-      } catch (e) {
-        ToastCards.error(message: 'Could not copy link to clipboard.');
-        Get.log("onShowOpportunityItemTap: $e");
-      }
+      await _onCopyLinkItemTap(oppId, oppProgramme);
     }
   }
 
@@ -249,9 +248,20 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
     ));
   }
 
+  Future<void> _onCopyLinkItemTap(int oppId, String oppProgramme) async {
+    final String url = _formatOpportunityLink(oppId, oppProgramme);
+    try {
+      await Clipboard.setData(ClipboardData(text: url));
+      ToastCards.success(message: 'Link copied to clipboard.');
+    } catch (e) {
+      ToastCards.error(message: 'Could not copy link to clipboard.');
+      Get.log("[HomeController] Copying Opportunity link returned error : $e");
+    }
+  }
+
   void onPersonApplicationLongPress(
       LongPressStartDetails details, Map applicationData) {
-    final oppID = applicationData['opportunity']['id'];
+    final oppID = int.parse(applicationData['opportunity']['id']);
     final oppProgramme =
         applicationData['opportunity']['programmes'][0]['short_name_display'];
 
@@ -259,6 +269,12 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
     final RelativeRect position = RelativeRect.fromLTRB(
         offset.dx, offset.dy, Get.width - offset.dx, Get.height - offset.dy);
     showMenu(context: Get.context!, position: position, items: [
+      PopupMenuItem(
+        height: 20,
+        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12),
+        child: Text("Copy link", style: Get.textTheme.bodySmall),
+        onTap: () => _onCopyLinkItemTap(oppID, oppProgramme),
+      ),
       PopupMenuItem(
         height: 20,
         padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12),
