@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -17,12 +18,12 @@ class AuthController extends GetxController {
   final MainController mainController = Get.find();
 
   InAppWebViewController? webViewController;
+  final CookieManager cookieManager = CookieManager.instance();
   final InAppWebViewSettings settings = InAppWebViewSettings(
-    clearCache: true,
-    clearSessionCache: true,
     incognito: true,
     transparentBackground: true,
     useShouldInterceptAjaxRequest: true,
+    useShouldInterceptRequest: true,
   );
 
   bool _caughtAccessToken = false;
@@ -40,6 +41,7 @@ class AuthController extends GetxController {
 
   @override
   void onReady() async {
+    await InAppWebViewController.clearAllCache();
     await _init();
     try {
       await _checkLogin();
@@ -86,9 +88,11 @@ class AuthController extends GetxController {
         email: dotenv.env['AUTH_EMAIL'],
         password: dotenv.env['AUTH_PASS'] ?? "",
       );
-      OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID']!);
-      if (await OneSignal.Notifications.canRequest()) {
-        OneSignal.Notifications.requestPermission(true);
+      if (!Platform.isWindows) {
+        OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID']!);
+        if (await OneSignal.Notifications.canRequest()) {
+          OneSignal.Notifications.requestPermission(true);
+        }
       }
     } catch (e, stack) {
       Get.log("_init: $e");
@@ -140,6 +144,7 @@ class AuthController extends GetxController {
 
   Future<AjaxRequestAction?> onAjaxReadyStateChange(
       InAppWebViewController webController, AjaxRequest ajaxRequest) async {
+    Get.log("onAjaxReadyStateChange: ${ajaxRequest.url}");
     if (ajaxRequest.url!.path.contains('/oauth/token') &&
         ajaxRequest.responseText!.isNotEmpty) {
       final Map<String, dynamic> response =

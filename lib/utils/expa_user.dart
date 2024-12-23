@@ -1,8 +1,12 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:thyna_core/controllers/main_controller.dart';
 
 class ExpaUser {
@@ -21,6 +25,9 @@ class ExpaUser {
   RxList managedPeople = RxList.empty();
   List focusProducts = [];
   List recentApplications = [];
+
+  StreamSubscription<List<Map<String, dynamic>>>?
+      _windowsNotificationsSubscription;
 
   void updateFromJson(Map json) {
     firstName = (json['currentPerson']['first_name'] as String).capitalizeFirst;
@@ -64,9 +71,31 @@ class ExpaUser {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt("userID", userID);
       await _saveUserToDB();
-      await OneSignal.login('$userID');
+      if (!Platform.isWindows) {
+        await OneSignal.login('$userID');
+      } else {
+        await _initWindowsNotifications();
+      }
       Get.offAllNamed('/main');
     }
+  }
+
+  Future<void> _initWindowsNotifications() async {
+    Get.log("[USER L84]: userID = $userID");
+    await _windowsNotificationsSubscription?.cancel();
+    _windowsNotificationsSubscription = Supabase.instance.client
+        .from('Notifications')
+        .stream(primaryKey: ['id']).listen((event) {
+      if (event.isEmpty) return;
+      for (final notification in event) {
+        if (notification['target_user'] == '$userID') {
+          if (!notification['sent_to_user']) {
+            // Send notification
+            Get.log("Received a desktop notification : $event");
+          }
+        }
+      }
+    });
   }
 
   Future<void> _saveUserToDB() async {

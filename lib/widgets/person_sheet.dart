@@ -176,7 +176,8 @@ class PersonSheet extends GetView<HomeController> {
                         fontWeight: FontWeight.w600,
                         color: Get.theme.colorScheme.primary),
                     unselectedLabelStyle: Get.textTheme.bodySmall!.copyWith(
-                      color: Get.theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: Get.theme.colorScheme.onSurface
+                          .withValues(alpha: 0.7),
                     ),
                     tabs: const [
                       Tab(

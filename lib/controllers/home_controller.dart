@@ -19,6 +19,7 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
   final Map<String, Map<String, Map>> analysisChartData = {};
 
   final DateTime currentMonth = DateTime.now();
+
   final List<String> shortMonths = [
     'Jan',
     'Feb',

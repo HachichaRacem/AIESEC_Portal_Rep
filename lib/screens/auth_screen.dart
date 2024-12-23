@@ -4,6 +4,16 @@ import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
 
+// The windows inAppWebView implementation so far only allows to intercept requests (not responses apparently)
+// Therefore you can only acquire the access token used in graphql requests (unless you analyse more the requests)
+// However since you know the key related to the access and refresh token in the Chrome DevTool
+// Search for it using the Storage API in the InAppWebView and/or the Cookies API in hope to get it.
+// If found try to implement this in the mobile version since its faster and does not require to check if the access token
+// is acquired and not and that value changes thingies used.
+
+// Once done with acquiring and updating the access and refresh tokens to the DB, test the notifications by
+// Adding a new row with the userID in the Notifications table and checking the logs
+
 class AuthScreen extends GetView<AuthController> {
   const AuthScreen({super.key});
 

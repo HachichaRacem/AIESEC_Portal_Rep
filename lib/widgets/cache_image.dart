@@ -11,7 +11,7 @@ class CacheImage extends StatelessWidget {
   final double height;
 
   late final Future<FileResponse> _imageFuture =
-      DefaultCacheManager().getImageFile(imageURL).single;
+      DefaultCacheManager().getImageFile(imageURL).first;
   late final bool _isSVGPicture = imageURL.contains(".svg");
 
   CacheImage(

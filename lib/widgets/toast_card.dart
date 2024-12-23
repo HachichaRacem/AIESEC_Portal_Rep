@@ -19,7 +19,7 @@ class ToastCards {
             .copyWith(color: Colors.white, fontWeight: FontWeight.w500),
       ),
       borderRadius: 40,
-      backgroundColor: Colors.green.withOpacity(0.95),
+      backgroundColor: Colors.green.withValues(alpha: 0.95),
     ));
   }
 
@@ -37,7 +37,7 @@ class ToastCards {
             .copyWith(color: Colors.white, fontWeight: FontWeight.w500),
       ),
       borderRadius: 40,
-      backgroundColor: Colors.blue.withOpacity(0.95),
+      backgroundColor: Colors.blue.withValues(alpha: 0.95),
     ));
   }
 
@@ -55,7 +55,7 @@ class ToastCards {
             .copyWith(color: Colors.white, fontWeight: FontWeight.w500),
       ),
       borderRadius: 40,
-      backgroundColor: Colors.orange.withOpacity(0.95),
+      backgroundColor: Colors.orange.withValues(alpha: 0.95),
     ));
   }
 
@@ -73,7 +73,7 @@ class ToastCards {
             .copyWith(color: Colors.white, fontWeight: FontWeight.w500),
       ),
       borderRadius: 40,
-      backgroundColor: Colors.red.withOpacity(0.95),
+      backgroundColor: Colors.red.withValues(alpha: 0.95),
     ));
   }
 }
