@@ -4,11 +4,14 @@ import 'package:get/get.dart';
 
 import '../controllers/home_controller.dart';
 
+// Adjusted Chart UI : grid and left values
+// Removed "Monthly review" text
+// Added date range input
+// Added analysing by dateRange functionality
+
 class HomeAnalysisWidget extends GetView<HomeController> {
   final Color _talentLineColor = const Color(0xFF0CB9C1);
   final Color _teachingLineColor = const Color(0xFFF48924);
-  late final RxInt _selectedMonthIndex =
-      RxInt(controller.analysisChartData.keys.length - 1);
   final List<String> _shortStatuses = [
     'APP',
     'ACC',
@@ -20,9 +23,7 @@ class HomeAnalysisWidget extends GetView<HomeController> {
   HomeAnalysisWidget({super.key});
   List<LineChartBarData> _lineBarsData() {
     List<LineChartBarData> lineBarsData = [];
-    final String selectedMonthShort =
-        controller.analysisChartData.keys.toList()[_selectedMonthIndex.value];
-    controller.analysisChartData[selectedMonthShort]!.forEach((key, value) {
+    controller.analysisChartData['data']!.forEach((key, value) {
       lineBarsData.add(
         LineChartBarData(
           isCurved: true,
@@ -48,40 +49,30 @@ class HomeAnalysisWidget extends GetView<HomeController> {
     return Obx(
       () => Column(
         children: [
-          Center(
-              child: Column(
-            children: [
-              Text(
-                'Monthly review',
-                style: Get.textTheme.headlineSmall!.copyWith(
-                  color: Colors.white,
+          Padding(
+            padding: const EdgeInsets.only(bottom: 22.0),
+            child: Center(
+              child: MaterialButton(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  side: BorderSide(
+                    color: Get.theme.colorScheme.outline,
+                    width: 0.6,
+                  ),
+                ),
+                onPressed: () => controller.onDateRangeTextClick(context),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                child: Text(
+                  controller.analysisDateRange.value,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-              DropdownButton(
-                underline: const SizedBox(),
-                dropdownColor: const Color(0xFF363633),
-                borderRadius: BorderRadius.circular(10),
-                isDense: true,
-                padding: const EdgeInsets.symmetric(vertical: 6.0),
-                items: List.generate(controller.analysisChartData.keys.length,
-                    (index) {
-                  return DropdownMenuItem(
-                    value: index,
-                    child: Text(
-                      controller.analysisChartData.keys
-                          .toList()[index]
-                          .capitalizeFirst,
-                      style: Get.textTheme.bodyMedium!.copyWith(
-                        color: Colors.white70,
-                      ),
-                    ),
-                  );
-                }),
-                onChanged: (value) => _selectedMonthIndex.value = value!,
-                value: _selectedMonthIndex.value,
-              ),
-            ],
-          )),
+            ),
+          ),
           Expanded(
             child: LineChart(
               LineChartData(
@@ -89,7 +80,12 @@ class HomeAnalysisWidget extends GetView<HomeController> {
                 borderData: FlBorderData(
                   show: false,
                 ),
-                gridData: const FlGridData(show: false),
+                gridData: const FlGridData(
+                  show: true,
+                  drawVerticalLine: true,
+                  drawHorizontalLine: true,
+                  verticalInterval: 1,
+                ),
                 lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(
                   tooltipRoundedRadius: 12,
@@ -135,11 +131,8 @@ class HomeAnalysisWidget extends GetView<HomeController> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 30,
-                      interval: 2,
                       getTitlesWidget: (value, meta) {
                         return SideTitleWidget(
-                          space: 20,
                           axisSide: AxisSide.left,
                           child: Text(
                             '${value.toInt()}',

@@ -5,6 +5,10 @@ import 'package:thyna_core/widgets/circular_person.dart';
 import 'package:thyna_core/widgets/home_analysis_widget.dart';
 import 'package:thyna_core/widgets/person_application_tile.dart';
 
+// Adjusted paddings between the titles and their widgets to keep it uniform
+// Renamed "Monthly review" to "Performance review"
+// TODO: Revamp authentication system using the AIESEC OAuth 2.0
+
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
 
@@ -15,12 +19,18 @@ class HomeScreen extends GetView<HomeController> {
       child: Column(
         children: [
           Flexible(
-            flex: 3,
+            flex: 4,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.max,
               children: [
-                const SizedBox(height: 18),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0),
+                  child: Text(
+                    "Performance review",
+                    style: Get.textTheme.titleMedium,
+                  ),
+                ),
                 Flexible(
                   child: Obx(
                     () => DecoratedBox(
@@ -76,7 +86,7 @@ class HomeScreen extends GetView<HomeController> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 14),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Text(
@@ -131,7 +141,7 @@ class HomeScreen extends GetView<HomeController> {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(
-                    bottom: 20,
+                    bottom: 10,
                   ),
                   child: Text(
                     "Recent applications",
@@ -139,56 +149,55 @@ class HomeScreen extends GetView<HomeController> {
                   ),
                 ),
                 Flexible(
-                  child: controller
-                          .mainController.user.recentApplications.isEmpty
-                      ? Center(
-                          child: Text(
-                            "No applications yet",
-                            style: TextStyle(
-                                color: Colors.grey[500], fontSize: 13),
-                          ),
-                        )
-                      : Scrollbar(
-                          radius: const Radius.circular(8),
-                          interactive: true,
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            padding:
-                                const EdgeInsets.only(bottom: 8.0, right: 8.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              children: List.generate(
-                                controller.mainController.user
-                                    .recentApplications.length,
-                                (index) {
-                                  final Map applicationData = controller
-                                      .mainController
-                                      .user
-                                      .recentApplications[index];
-                                  final String personName =
-                                      '${applicationData['person']['full_name']}'
-                                          .capitalizeAllWordsFirstLetter();
-                                  final String opportunityTitle =
-                                      '${applicationData['opportunity']['title']}'
-                                          .capitalizeAllWordsFirstLetter();
-                                  final hostDetails =
-                                      '${applicationData['opportunity']['host_lc']['name']} - ${applicationData['opportunity']['host_lc']['parent']['name']}'
-                                          .capitalizeAllWordsFirstLetter();
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 6.0),
-                                    child: PersonApplicationTile(
-                                      applicationData: applicationData,
-                                      header: personName,
-                                      title: opportunityTitle,
-                                      label: hostDetails,
-                                    ),
-                                  );
-                                },
+                  child:
+                      controller.mainController.user.recentApplications.isEmpty
+                          ? Center(
+                              child: Text(
+                                "No applications yet",
+                                style: TextStyle(
+                                    color: Colors.grey[500], fontSize: 13),
+                              ),
+                            )
+                          : Scrollbar(
+                              radius: const Radius.circular(8),
+                              interactive: true,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.vertical,
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: List.generate(
+                                    controller.mainController.user
+                                        .recentApplications.length,
+                                    (index) {
+                                      final Map applicationData = controller
+                                          .mainController
+                                          .user
+                                          .recentApplications[index];
+                                      final String personName =
+                                          '${applicationData['person']['full_name']}'
+                                              .capitalizeAllWordsFirstLetter();
+                                      final String opportunityTitle =
+                                          '${applicationData['opportunity']['title']}'
+                                              .capitalizeAllWordsFirstLetter();
+                                      final hostDetails =
+                                          '${applicationData['opportunity']['host_lc']['name']} - ${applicationData['opportunity']['host_lc']['parent']['name']}'
+                                              .capitalizeAllWordsFirstLetter();
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 12.0),
+                                        child: PersonApplicationTile(
+                                          applicationData: applicationData,
+                                          header: personName,
+                                          title: opportunityTitle,
+                                          label: hostDetails,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
                 ),
               ],
             ),

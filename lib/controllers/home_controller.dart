@@ -13,12 +13,23 @@ import 'package:url_launcher/url_launcher.dart';
 
 class HomeController extends GetxController with GetTickerProviderStateMixin {
   final RxInt analysisChartStatus =
-      0.obs; // 0 - loading, 1 - succeess, 2 - error
+      0.obs; // 0 - loading, 1 - success, 2 - error
 
   final MainController mainController = Get.find();
   final Map<String, Map<String, Map>> analysisChartData = {};
 
-  final DateTime currentMonth = DateTime.now();
+  final DateTime today = DateTime.now();
+  late final DateTime initAnalysisStartDate =
+      DateTime(today.year, today.month, 1);
+  late final DateTime initAnalysisEndDate =
+      DateTime(initAnalysisStartDate.year, initAnalysisStartDate.month + 1, 0);
+  late final RxString analysisDateRange = RxString(
+      _formatDateRangeText(initAnalysisStartDate, initAnalysisEndDate));
+
+  late DateTimeRange _analysisDateRange = DateTimeRange(
+    start: initAnalysisStartDate,
+    end: initAnalysisEndDate,
+  );
 
   final List<String> shortMonths = [
     'Jan',
@@ -59,19 +70,47 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
 
   @override
   void onInit() {
-    _initAnalysisChart();
+    _initAnalysisChart(initAnalysisStartDate, initAnalysisEndDate);
     super.onInit();
   }
 
-  String _getDateRangeOfMonth({required int month, bool isEndOfDay = false}) {
-    final DateTime now =
-        DateTime(month == 1 ? currentMonth.year + 1 : currentMonth.year, month);
-    final DateTime endOfMonthDate = DateTime(now.year, now.month + 1, 0);
-    if (isEndOfDay) {
+  String _getDateRangeOfMonth(
+      {required DateTime date, bool isEndDate = false}) {
+    if (isEndDate) {
+      final DateTime endOfMonthDate = DateTime(date.year, date.month + 1, 0);
       return "${endOfMonthDate.year}-${endOfMonthDate.month.toString().padLeft(2, "0")}-${endOfMonthDate.day.toString().padLeft(2, "0")} 23:59:59";
     } else {
-      return "${now.year}-${now.month.toString().padLeft(2, "0")}-01 00:00:00";
+      return "${date.year}-${date.month.toString().padLeft(2, "0")}-01 00:00:00";
     }
+  }
+
+  String _formatDateRangeText(DateTime startDate, DateTime endDate) {
+    final String strStartDate =
+        "${shortMonths[startDate.month - 1]} ${startDate.day}, ${startDate.year - 2000}";
+    final String strEndDate =
+        "${shortMonths[endDate.month - 1]} ${endDate.day},  ${endDate.year - 2000}";
+    return "$strStartDate - $strEndDate";
+  }
+
+  void onDateRangeTextClick(BuildContext context) {
+    showDateRangePicker(
+      context: context,
+      firstDate: DateTime(1990),
+      lastDate: initAnalysisEndDate,
+      initialDateRange: _analysisDateRange,
+    ).then(
+      (value) {
+        if (value != null) {
+          _analysisDateRange = value;
+          final String startDate =
+              "${shortMonths[value.start.month - 1]} ${value.start.day}, ${value.start.year - 2000}";
+          final String endDate =
+              "${shortMonths[value.end.month - 1]} ${value.end.day},  ${value.end.year - 2000}";
+          _initAnalysisChart(_analysisDateRange.start, _analysisDateRange.end);
+          analysisDateRange.value = "$startDate - $endDate";
+        }
+      },
+    );
   }
 
   void _extractMonthDataPerProduct(
@@ -87,17 +126,6 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
     }
     monthDataPerProduct['talent']![status] = applicants['talent']!.length;
     monthDataPerProduct['teaching']![status] = applicants['teaching']!.length;
-  }
-
-  List<int> _getSemesterMonths() {
-    final List<int> firstSemester = [2, 3, 4, 5, 6, 7];
-    final List<int> secondSemester = [8, 9, 10, 11, 12, 1];
-    if (firstSemester.contains(currentMonth.month)) {
-      final currentMonthIndex = firstSemester.indexOf(currentMonth.month);
-      return firstSemester.sublist(0, currentMonthIndex + 1);
-    }
-    final currentMonthIndex = secondSemester.indexOf(currentMonth.month);
-    return secondSemester.sublist(0, currentMonthIndex + 1);
   }
 
   Future<Map> _getMonthAnalysisData(String startDate, String endDate) async {
@@ -119,27 +147,27 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
     return response.data['data'];
   }
 
-  Future<void> _initAnalysisChart() async {
-    final semesterMonths = _getSemesterMonths();
+  Future<void> _initAnalysisChart(DateTime startDate, DateTime endDate) async {
     analysisChartData.clear(); // For debugging purposes, might keep it
+    analysisChartStatus.value = 0;
     try {
-      for (final month in semesterMonths) {
-        final Map<String, Map<String, int>> monthDataPerProduct = {
-          'talent': {},
-          'teaching': {}
-        };
-        final String startDate = _getDateRangeOfMonth(month: month);
-        final String endDate =
-            _getDateRangeOfMonth(month: month, isEndOfDay: true);
-        final Map monthData = await _getMonthAnalysisData(startDate, endDate);
+      final Map<String, Map<String, int>> monthDataPerProduct = {
+        'talent': {},
+        'teaching': {}
+      };
+      final String strStartDate = _getDateRangeOfMonth(date: startDate);
+      final String strEndDate =
+          _getDateRangeOfMonth(date: endDate, isEndDate: true);
+      final Map monthData =
+          await _getMonthAnalysisData(strStartDate, strEndDate);
 
-        for (final status in statuses) {
-          _extractMonthDataPerProduct(
-              monthData: monthData,
-              status: status.toLowerCase(),
-              monthDataPerProduct: monthDataPerProduct);
-        }
-        analysisChartData[shortMonths[month - 1]] = monthDataPerProduct;
+      for (final status in statuses) {
+        _extractMonthDataPerProduct(
+            monthData: monthData,
+            status: status.toLowerCase(),
+            monthDataPerProduct: monthDataPerProduct);
+
+        analysisChartData['data'] = monthDataPerProduct;
       }
       analysisChartStatus.value = 1;
     } catch (e, stack) {
@@ -151,7 +179,7 @@ class HomeController extends GetxController with GetTickerProviderStateMixin {
 
   void analysisChartOnRetryClick() {
     analysisChartStatus.value = 0;
-    _initAnalysisChart();
+    _initAnalysisChart(_analysisDateRange.start, _analysisDateRange.end);
   }
 
   void onPersonPhoneClick(String phone) async {
