@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:thyna_core/utils/exceptions.dart';
 import 'package:thyna_core/utils/expa_user.dart';
 
 class MainController extends GetxController {
@@ -175,11 +176,17 @@ class MainController extends GetxController {
                     }).eq('access_token', oldAccessToken);
                     Get.log(
                         '[$_tag]: Successfully refreshed the token and updated the database');
-                    return handler.resolve(result);
+                    throw Exceptions.refreshTokenInvalid;
                   }
                 }
               } catch (e) {
-                Get.log('[$_tag]: Refreshing the access token returned $e');
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.remove("userID");
+                Get.log(
+                    '[$_tag]: Refreshing the access token has failed. Restarting auth flow');
+
+                Get.offAllNamed('/auth');
+                return handler.reject(error);
               }
             }
             // Unauthorized account

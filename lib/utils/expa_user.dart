@@ -76,7 +76,6 @@ class ExpaUser {
       } else {
         await _initWindowsNotifications();
       }
-      Get.offAllNamed('/main');
     }
   }
 

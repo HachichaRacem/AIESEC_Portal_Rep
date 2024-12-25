@@ -1,6 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
@@ -8,71 +9,54 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:thyna_core/controllers/main_controller.dart';
+import 'package:thyna_core/utils/auth_inappbrowser.dart';
+import 'package:thyna_core/utils/auth_server.dart';
 import 'package:thyna_core/utils/exceptions.dart';
 
 class AuthController extends GetxController {
   static const String _tag = 'AuthController';
-  final RxInt stackIndex = 0.obs;
-  final RxBool sendToSignIn = false.obs;
-  final RxBool hasSignInPageLoaded = false.obs;
+
   final MainController mainController = Get.find();
 
-  InAppWebViewController? webViewController;
-  final CookieManager cookieManager = CookieManager.instance();
-  final InAppWebViewSettings settings = InAppWebViewSettings(
-    incognito: true,
-    transparentBackground: true,
-    useShouldInterceptAjaxRequest: true,
-    useShouldInterceptRequest: true,
+  final RxInt authStatus = 0.obs;
+
+  final InAppBrowser _browser = AuthInAppBrowser();
+  final InAppBrowserClassSettings _settingsBrowser = InAppBrowserClassSettings(
+    browserSettings: InAppBrowserSettings(
+        allowGoBackWithBackButton: false, hideTitleBar: true, hideUrlBar: true),
   );
-
-  bool _caughtAccessToken = false;
-  @override
-  void onInit() {
-    hasSignInPageLoaded.listen((value) {
-      if (value) {
-        if (sendToSignIn.value) {
-          stackIndex.value = 1;
-        }
-      }
-    });
-    super.onInit();
-  }
-
+  final AuthServer _authServer = AuthServer();
+  Isolate? _serverIsolate;
   @override
   void onReady() async {
-    await InAppWebViewController.clearAllCache();
     await _init();
     try {
       await _checkLogin();
     } on Exceptions catch (e) {
-      Get.log("$_tag - USER sent to login screen ($e)");
-      sendToSignIn.value = true;
+      _initServer();
+      Get.log("[$_tag] - USER sent to the authentication screen ($e)");
+      authStatus.value = 1;
     } catch (e, stack) {
-      Get.log("[$_tag] Something went wrong");
-      Get.log("$_tag - $e");
-      Get.log("$_tag - $stack");
-      stackIndex.value = 2;
+      Get.log("[$_tag] - Something went wrong");
+      Get.log("[$_tag] - $e");
+      Get.log("[$_tag] - $stack");
+      authStatus.value = 2;
     }
     super.onReady();
   }
 
   Future<void> _restartAuthFlow() async {
     try {
-      stackIndex.value = 0;
-      sendToSignIn.value = false;
-      if (webViewController != null) {
-        webViewController?.reload();
-      }
+      authStatus.value = 0;
       await _checkLogin();
     } on Exceptions catch (e) {
-      Get.log("$_tag - USER sent to login screen ($e)");
-      sendToSignIn.value = true;
+      Get.log("[$_tag] - USER sent to the authentication screen ($e)");
+      authStatus.value = 1;
     } catch (e, stack) {
-      Get.log("Something went wrong");
-      Get.log("$_tag - $e");
-      Get.log("$_tag - $stack");
-      stackIndex.value = 2;
+      Get.log("[$_tag] - Something went wrong");
+      Get.log("[$_tag] - $e");
+      Get.log("[$_tag] - $stack");
+      authStatus.value = 2;
     }
   }
 
@@ -100,6 +84,22 @@ class AuthController extends GetxController {
     }
   }
 
+  void _initServer() async {
+    final ReceivePort receivePort = ReceivePort();
+    final Map<String, dynamic> serverParams = {
+      'env': {
+        'REDIRECT_URI': dotenv.env['REDIRECT_URI']!,
+        'CLIENT_ID': dotenv.env['CLIENT_ID']!,
+        'CLIENT_SECRET': dotenv.env['CLIENT_SECRET']!,
+      },
+      'sendPort': receivePort.sendPort
+    };
+    _serverIsolate = await Isolate.spawn(_authServer.start, serverParams);
+    receivePort.listen((value) {
+      debugPrint("[MAIN THREAD - FROM SERVER]: $value");
+    });
+  }
+
   /// Checks if the user is logged in by looking for a valid user ID in
   /// SharedPreferences. If the user ID is valid, it fetches the user's
   /// access token and refresh token from the database and assigns them
@@ -121,6 +121,7 @@ class AuthController extends GetxController {
         mainController.user.accessToken = userData.first['access_token'];
         mainController.user.refreshToken = userData.first['refresh_token'];
         await mainController.user.expaFetchUserData();
+        Get.offAllNamed('/main');
       } else {
         await prefs.remove('userID');
         throw Exceptions.userNotFoundInDB;
@@ -130,50 +131,19 @@ class AuthController extends GetxController {
     }
   }
 
-  void onProgressChanged(
-      InAppWebViewController controller, int progress) async {
-    final WebUri? currentURL = await controller.getUrl();
-
-    if (currentURL != null) {
-      if (currentURL.path == "/members/sign_in" && progress > 67) {
-        Get.log("Should show the signin page now");
-        hasSignInPageLoaded.value = true;
-      }
-    }
-  }
-
-  Future<AjaxRequestAction?> onAjaxReadyStateChange(
-      InAppWebViewController webController, AjaxRequest ajaxRequest) async {
-    Get.log("onAjaxReadyStateChange: ${ajaxRequest.url}");
-    if (ajaxRequest.url!.path.contains('/oauth/token') &&
-        ajaxRequest.responseText!.isNotEmpty) {
-      final Map<String, dynamic> response =
-          jsonDecode(ajaxRequest.responseText!);
-      await webController.stopLoading();
-      await CookieManager.instance().deleteAllCookies();
-      await webController.platform.clearAllCache();
-      await WebStorageManager.instance().deleteAllData();
-      try {
-        if (!_caughtAccessToken) {
-          _caughtAccessToken = true;
-          mainController.user.accessToken = response['access_token'];
-          mainController.user.refreshToken = response['refresh_token'];
-          await mainController.user.expaFetchUserData();
-        }
-      } catch (e, stack) {
-        Get.log('[$_tag]: $e');
-        Get.log('[$_tag]: $stack');
-        stackIndex.value = 2;
-      }
-    }
-    return AjaxRequestAction.PROCEED;
-  }
-
-  Future<void> onRefresh() async {
-    await webViewController?.reload();
+  void onLoginBtnClick() {
+    _browser.openUrlRequest(
+        urlRequest: URLRequest(url: WebUri("http://localhost:8080")),
+        settings: _settingsBrowser);
   }
 
   void onRetryButtonClick() {
     _restartAuthFlow();
+  }
+
+  @override
+  Future<void> onClose() async {
+    _serverIsolate?.kill(priority: Isolate.immediate);
+    super.onClose();
   }
 }
