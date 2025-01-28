@@ -29,6 +29,6 @@ This mobile application is made during an EST experience with an objective of fa
 <img src="https://github.com/user-attachments/assets/606fc8eb-e951-44a5-b982-9908ee330a87" alt="Applications details" width="100">
 
 
-## Demo
+## Trailer
 
 [![DEMO](https://i.imgur.com/G4lXULX.png)](https://drive.google.com/file/d/1cuLbKlnfYUkbW3MdWJPQFmVnhJqoCbJ8/view?usp=drive_link)
