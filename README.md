@@ -32,3 +32,7 @@ This mobile application is made during an EST experience with an objective of fa
 ## Trailer
 
 [![DEMO](https://i.imgur.com/G4lXULX.png)](https://drive.google.com/file/d/1cuLbKlnfYUkbW3MdWJPQFmVnhJqoCbJ8/view?usp=drive_link)
+
+## Demo
+
+https://drive.google.com/file/d/16fs0fC8-aI2s6EKgwDQEPCFGX_HDyAkk/view?usp=drive_link
