@@ -5,10 +5,6 @@ import 'package:thyna_core/widgets/circular_person.dart';
 import 'package:thyna_core/widgets/home_analysis_widget.dart';
 import 'package:thyna_core/widgets/person_application_tile.dart';
 
-// Adjusted paddings between the titles and their widgets to keep it uniform
-// Renamed "Monthly review" to "Performance review"
-// TODO: Revamp authentication system using the AIESEC OAuth 2.0
-
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
 
